@@ -1,2 +1,2 @@
-# TokenAuthInAspNetCore2
-Token Based Authentication in Asp.Net Core 2.0
+# RefreshTokensInAspNetCore2
+Implemnting refresh tokens in Asp.Net Core 2.0
