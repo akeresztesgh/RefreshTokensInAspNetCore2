@@ -30,7 +30,7 @@ namespace api.Utils
             };
         }
 
-        public static LoginResponseData Execute(ApplicationUser user, ApiDbContext db)
+        public static LoginResponseData Execute(ApplicationUser user, ApiDbContext db, RefreshToken refreshToken=null)
         {
             var options = GetOptions();
             var now = DateTime.UtcNow;
@@ -54,7 +54,21 @@ namespace api.Utils
                 var role = db.Roles.Single(i => i.Id == userRole.RoleId);
                 claims.Add(new Claim(Extensions.RoleClaimType, role.Name));
             }
-            
+
+            if (refreshToken == null)
+            {
+                refreshToken = new RefreshToken()
+                {
+                    UserId = user.Id,
+                    Token = Guid.NewGuid().ToString("N"),
+                };
+                db.InsertNew(refreshToken);
+            }
+
+            refreshToken.IssuedUtc = now;
+            refreshToken.ExpiresUtc = now.Add(options.Expiration);
+            db.SaveChanges();
+
             var jwt = new JwtSecurityToken(
                 issuer: options.Issuer,
                 audience: options.Audience,
@@ -67,6 +81,7 @@ namespace api.Utils
             var response = new LoginResponseData
             {
                 access_token = encodedJwt,
+                refresh_token = refreshToken.Token,
                 expires_in = (int)options.Expiration.TotalSeconds,
                 userName = user.UserName,
                 firstName = user.FirstName,

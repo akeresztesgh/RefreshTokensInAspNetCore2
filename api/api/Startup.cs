@@ -117,7 +117,7 @@ namespace api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         // NOTE: DI is done here
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
-            ApiDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+            ApiDbContext context)
         {
             if (env.IsDevelopment())
             {
@@ -126,11 +126,8 @@ namespace api
 
             app.UseCors("CorsPolicy");
 
-
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-            
-            ApiDbSeedData.Seed(userManager, roleManager).Wait();
+            loggerFactory.AddDebug();           
 
             if (env.IsDevelopment())
             {
@@ -138,6 +135,7 @@ namespace api
             }
 
             app.UseMiddleware<TokenProviderMiddleware>();
+            app.UseMiddleware<RefreshTokenProviderMiddleware>();
             app.UseAuthentication();
 
             app.UseMvc();
